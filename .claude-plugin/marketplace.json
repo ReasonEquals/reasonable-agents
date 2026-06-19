@@ -1,0 +1,18 @@
+{
+  "name": "reasonable-agents",
+  "owner": {
+    "name": "ReasonEquals"
+  },
+  "metadata": {
+    "description": "Self-marketplace for the reasonable-agents plugin — harness-enforced adversarial review for Claude Code subagents."
+  },
+  "plugins": [
+    {
+      "name": "reasonable-agents",
+      "source": "./",
+      "description": "Harness-enforced adversarial review for Claude Code subagents (pre-release v0.1 scaffold; enforcement hooks land next release).",
+      "category": "developer-tools",
+      "homepage": "https://github.com/ReasonEquals/reasonable-agents"
+    }
+  ]
+}

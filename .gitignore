@@ -1,0 +1,9 @@
+# Local Claude Code settings (per-machine; never ship)
+.claude/settings.local.json
+
+# OS / editor cruft
+.DS_Store
+*.log
+
+# Node (none expected in v0.1, but guard against accidental installs)
+node_modules/

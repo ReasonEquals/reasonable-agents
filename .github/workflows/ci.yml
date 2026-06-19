@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Weekly (Mon 06:17 UTC) — catch Claude Code plugin-spec drift on CC's release
+    # cadence, not just on repo changes.
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: shellcheck scripts/*.sh tests/*.sh
+
+  contraband:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: contraband gate
+        run: bash tests/contraband.sh
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: validate plugin manifest
+        run: |
+          set -euo pipefail
+          # 2.1.109 lacks --strict; latest CC (this runner) supports it. Detect and
+          # degrade gracefully so the gate works on both.
+          strict=""
+          if claude plugin validate --help 2>&1 | grep -q -- '--strict'; then
+            strict="--strict"
+          fi
+          # shellcheck disable=SC2086
+          out="$(claude plugin validate $strict . 2>&1)"
+          printf '%s\n' "$out"
+          # Assert the command actually validated (guards a silently no-op flag).
+          printf '%s' "$out" | grep -qi 'validation passed'

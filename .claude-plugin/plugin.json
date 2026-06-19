@@ -1,0 +1,19 @@
+{
+  "name": "reasonable-agents",
+  "version": "0.1.0",
+  "description": "Harness-enforced adversarial review for Claude Code subagents. Pairs every domain-expert agent with a skeptic and enforces the pairing at the hook layer, so the review isn't a file you hope the agent reads. Pre-release (v0.1): installs and scaffolds; the enforcement hooks ship as fail-open no-ops until the next release (see README).",
+  "author": {
+    "name": "ReasonEquals"
+  },
+  "homepage": "https://github.com/ReasonEquals/reasonable-agents",
+  "keywords": [
+    "agents",
+    "subagents",
+    "hooks",
+    "adversarial-review",
+    "enforcement",
+    "eval",
+    "llmops"
+  ],
+  "license": "MIT"
+}
