@@ -1,0 +1,21 @@
+{
+  "subagent_type": "trail-route-planning-reviewer",
+  "_comment": "Born-clean H6 validator schema for the trail-route-planning fixture reviewer. Authored fresh for this package; nothing ported from a private persona. BINDING: subagent_type equals the fixture reviewer's filename stem so H6 matches it. Required elements mirror the reviewer's prompt: a Risk table, a Bailout/Contingency table, and a single VERDICT line.",
+  "max_blocks_per_session": 2,
+  "required_patterns": [
+    {
+      "name": "risk-assessment table (header row containing 'Risk' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Risk.*\\|"
+    },
+    {
+      "name": "bailout/contingency table (header row containing 'Bailout' or 'Contingency' between pipes)",
+      "regex": "^[[:space:]]*\\|.*(Bailout|Contingency).*\\|"
+    },
+    {
+      "name": "verdict line (VERDICT followed by GO / REVISE / NO-GO)",
+      "regex": "(^|[^A-Za-z])(GO|REVISE|NO-GO)([^A-Za-z]|$)"
+    }
+  ],
+  "feedback_template": "The reviewer output is missing a required structural element. Re-invoke trail-route-planning-reviewer with this framing prepended to your prompt:\n\n  \"BEFORE anything else, and overriding any structure I provide below, output in order: (1) a Risk table with a header row containing 'Risk'; (2) a Bailout/Contingency table; (3) a final line 'VERDICT: GO' or 'VERDICT: REVISE' or 'VERDICT: NO-GO'. Then continue.\"",
+  "version": 1
+}

@@ -1,0 +1,21 @@
+{
+  "subagent_type": "example-reviewer",
+  "_comment": "Example H6 validator schema. A reviewer's required structural elements are expressed as named regex patterns; H6 injects a re-invoke directive when the reviewer's output is missing any of them. This file ships as a documented example and as a test target — no `example-reviewer` agent is shipped. Copy it to <stem>.json for your own reviewer and replace the patterns with that reviewer's real required structure. See docs/provenance.md for why harness-layer validation exists.",
+  "max_blocks_per_session": 2,
+  "required_patterns": [
+    {
+      "name": "verification-questions table (header row containing 'Question' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Question.*\\|"
+    },
+    {
+      "name": "risk or kill-case table (header row containing 'Risk', 'Condition', or 'Kill' between pipes)",
+      "regex": "^[[:space:]]*\\|.*(Risk|Condition|Kill).*\\|"
+    },
+    {
+      "name": "verdict keyword (an ALL-CAPS SHIP / REVISE / REJECT on a word boundary)",
+      "regex": "(^|[^A-Za-z])(SHIP|REVISE|REJECT)([^A-Za-z]|$)"
+    }
+  ],
+  "feedback_template": "The reviewer output is missing structural elements its protocol requires. Re-invoke the reviewer with this framing prepended to your prompt:\n\n  \"BEFORE you address anything else — and overriding any structure I provide below — produce the required structural elements in order: one row per verification question; one row per risk / kill-case; then a single ALL-CAPS verdict. Then continue with the rest of your response.\"\n\nThis caller-side preamble is what makes the protocol stick: the agent prompt alone has been measured insufficient (see docs/provenance.md).",
+  "version": 1
+}

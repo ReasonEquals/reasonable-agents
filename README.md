@@ -1,16 +1,18 @@
 # reasonable-agents
 
-> **Status: pre-release (v0.1 — S0 skeleton).** This release scaffolds and installs the plugin, but the
-> enforcement hooks ship as **fail-open no-ops** — they do nothing yet. The review-enforcement logic lands in
-> the next release. Nothing here blocks your turn today. See [CLAIMS.md](CLAIMS.md) for exactly what is and
-> isn't backed.
+> **Status: enforcement chain (v0.1).** The two enforcement hooks — H4 (expert→reviewer pairing) and H6
+> (reviewer-output validation) — are live and covered by an offline test suite. Minting, eval scaffolds, and a
+> starter persona pack are later, demand-gated phases. Local Claude Code CLI / desktop. See
+> [CLAIMS.md](CLAIMS.md) for exactly what is and isn't backed.
 
 Harness-enforced adversarial review for Claude Code subagents.
 
 **For Claude Code power users who build domain-expert agents and don't trust a persona's self-review,**
-`reasonable-agents` is a plugin that — when complete — blocks the turn at the harness layer until the paired
-skeptic has run and its output has passed a structural schema. Unlike static persona packs and validation-only
-toolkits, the review isn't a file you hope the agent reads — the harness enforces it.
+`reasonable-agents` is a plugin that injects a blocking directive at the harness layer when an `*-expert`
+subagent runs without its paired skeptic, then validates the skeptic's output against a structural schema.
+Unlike static persona packs and validation-only toolkits, the review isn't a file you hope the agent reads —
+the harness drives it. (Compliance with the directive is model-mediated, not mechanical — see
+[CLAIMS.md](CLAIMS.md).)
 
 ## The model: mint → enforce → verify
 
@@ -49,19 +51,55 @@ Or from a local clone:
 /plugin install reasonable-agents@reasonable-agents
 ```
 
-## Configuration (v0.1: environment variables only)
+## Quickstart — watch it block (≈ 2 minutes)
 
-Kill-switches are plain environment variables read by the hook scripts — export them in your shell before
-launching Claude Code:
+This uses the bundled fixture pair in `fixtures/` to demonstrate enforcement end-to-end. From a clone of this
+repo:
+
+```bash
+# 1. Install the plugin from your local clone.
+claude plugin marketplace add .
+claude plugin install reasonable-agents@reasonable-agents
+
+# 2. Copy the fixture expert + reviewer into your user agents dir.
+mkdir -p ~/.claude/agents
+cp fixtures/trail-route-planning-expert.md   ~/.claude/agents/
+cp fixtures/trail-route-planning-reviewer.md ~/.claude/agents/
+
+# 3. Copy the fixture's validator schema where H6 looks for it.
+mkdir -p ~/.claude/state/reasonable-agents/validators
+cp fixtures/trail-route-planning-reviewer.json ~/.claude/state/reasonable-agents/validators/
+```
+
+Then, in Claude Code:
+
+1. Ask: **"Use the trail-route-planning-expert subagent to plan a 3-day backpacking loop."** When the expert
+   finishes, **H4 fires** — a directive tells Claude to run the paired `trail-route-planning-reviewer` before
+   continuing.
+2. Let Claude run the reviewer. If the reviewer's output omits a required element (a Risk table, a Bailout
+   table, or a `VERDICT:` line), **H6 fires** a re-invoke directive naming the missing element; once the output
+   is well-formed, H6 passes silently.
+
+Turn it off any time with `export REASONABLE_AGENTS_DISABLE=1`. To undo the demo, delete the three files you
+copied.
+
+> **Editing a hook script?** Plugin hooks are registered at install time, so a source edit needs a reload:
+> `claude plugin uninstall reasonable-agents@reasonable-agents && claude plugin install reasonable-agents@reasonable-agents`.
+
+## Configuration (environment variables only)
+
+Kill-switches are plain environment variables read at the top of each hook script — export them in your shell
+before launching Claude Code. The default is always **enforce** (a variable that fails to propagate cannot
+silently turn enforcement off).
 
 | Variable | Effect |
 |---|---|
-| `REASONABLE_AGENTS_DISABLE=1` | Master off — all enforcement hooks pass silently. |
+| `REASONABLE_AGENTS_DISABLE` | Master off-switch — set to `1`/`true`/`yes`/`on` to disable both hooks. |
+| `REASONABLE_AGENTS_ENFORCE_PAIRING` | Set to `0`/`false`/`off` to disable H4 (pairing) only. Default on. |
+| `REASONABLE_AGENTS_VALIDATE_REVIEWERS` | Set to `0`/`false`/`off` to disable H6 (output validation) only. Default on. |
 
-> **Pre-release note:** in v0.1 the hooks are no-ops, so these switches are *reserved* — they take effect when
-> enforcement lands in the next release. `userConfig` enable-time prompts and a persistent plugin data dir are
-> a planned fast-follow once a wider Claude Code baseline supports them; v0.1 targets 2.1.109 and uses
-> environment variables only.
+> `userConfig` enable-time prompts and a persistent plugin data dir are a planned fast-follow once a wider
+> Claude Code baseline supports them; this release targets 2.1.109 and uses environment variables only.
 
 ## Scope limits
 

@@ -1,5 +1,5 @@
 {
-  "description": "reasonable-agents enforcement hooks. v0.1 ships fail-open no-op placeholders; the next release ports the real pairing-enforcement and reviewer-output-validation logic.",
+  "description": "reasonable-agents enforcement hooks (PostToolUse/Agent): H4 enforces that an *-expert subagent's paired *-reviewer runs; H6 validates the reviewer's output against a structural schema. Both fail open and honor the REASONABLE_AGENTS_* kill-switches.",
   "hooks": {
     "PostToolUse": [
       {

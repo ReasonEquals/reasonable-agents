@@ -10,7 +10,9 @@
 #
 # Design notes / limits:
 #   * Scans the working tree only. It does NOT read .git/ history; commit metadata
-#     is guarded separately (pinned commit identity + a `git log` author check).
+#     is guarded separately (pinned commit identity + a `git log` author check). In a
+#     git worktree, `.git` is a FILE (a `gitdir:` pointer holding an absolute path),
+#     not a directory, so it is excluded by name as well as by --exclude-dir.
 #   * Tokens are matched as case-insensitive SUBSTRINGS (no word boundaries). A
 #     leak gate must err toward over-catching: word boundaries were considered and
 #     rejected because they create false NEGATIVES on "_"-joined identifiers and
@@ -32,6 +34,7 @@ grep -rInE "${PATTERN}" "${ROOT}" \
   --exclude-dir=.git \
   --exclude-dir=.claude \
   --exclude-dir=node_modules \
+  --exclude='.git' \
   --exclude='contraband.sh' || rc=$?
 
 case "${rc}" in

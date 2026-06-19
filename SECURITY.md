@@ -12,11 +12,16 @@ a forward-looking absolute.)
 
 ## Kill switch
 
-Enforcement is gated by environment variables read at the top of each hook script (for example,
-`REASONABLE_AGENTS_DISABLE=1`). Export the variable in your shell to disable enforcement; unset it to
-re-enable. The check is the first thing each script does, so a disabled hook does no work.
+Enforcement is gated by environment variables read at the very top of each hook script. Export one in
+your shell to disable enforcement; unset it (or set it to an off-value) to re-enable. The check is the
+first thing each script does, so a disabled hook does no work — and the default is always **enforce**
+(a variable that fails to propagate cannot silently turn enforcement off).
 
-*(In v0.1 the hooks are no-op placeholders, so these switches are reserved until enforcement lands.)*
+| Variable | Effect |
+|---|---|
+| `REASONABLE_AGENTS_DISABLE` | Master off-switch — set to `1`/`true`/`yes`/`on` to disable both hooks. |
+| `REASONABLE_AGENTS_ENFORCE_PAIRING` | Set to `0`/`false`/`off` to disable H4 (pairing) only. Default on. |
+| `REASONABLE_AGENTS_VALIDATE_REVIEWERS` | Set to `0`/`false`/`off` to disable H6 (output validation) only. Default on. |
 
 ## Fail-open posture
 
