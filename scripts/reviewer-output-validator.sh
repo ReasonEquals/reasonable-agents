@@ -44,6 +44,14 @@ SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null
 # No subagent_type → not an Agent call we can validate.
 [ -z "$SUBAGENT_TYPE" ] && exit 0
 
+# Security: subagent_type and session_id are interpolated into file paths below. Reject a
+# subagent_type outside the minting namespace ([a-z0-9-]) so a crafted value cannot
+# traverse the filesystem (e.g. ../) into an attacker-chosen JSON; sanitize the session_id
+# used in the circuit-breaker filename. A non-conforming type has no managed validator
+# anyway -> fail open.
+case "$SUBAGENT_TYPE" in *[!a-z0-9-]*) exit 0 ;; esac
+SESSION_ID=$(printf '%s' "$SESSION_ID" | tr -cd 'A-Za-z0-9_-'); [ -z "$SESSION_ID" ] && SESSION_ID="unknown"
+
 DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.claude/state/reasonable-agents}"
 
 # Two-path lookup: mint-time/user validators first, shipped examples second.
@@ -88,7 +96,7 @@ i=0
 while [ "$i" -lt "$PATTERN_COUNT" ]; do
   NAME=$(jq -r ".required_patterns[$i].name" "$CONFIG_FILE" 2>/dev/null)
   REGEX=$(jq -r ".required_patterns[$i].regex" "$CONFIG_FILE" 2>/dev/null)
-  if ! printf '%s' "$RESPONSE_TEXT" | grep -qE "$REGEX"; then
+  if ! printf '%s' "$RESPONSE_TEXT" | grep -qE -- "$REGEX"; then
     MISSING="${MISSING}  - ${NAME}"$'\n'
   fi
   i=$((i + 1))
@@ -101,6 +109,8 @@ done
 STATE_DIR="${DATA_DIR}/state/validator-blocks"
 mkdir -p "$STATE_DIR" 2>/dev/null
 COUNT_FILE="$STATE_DIR/${SESSION_ID}_${SUBAGENT_TYPE}.count"
+# Never follow a symlink for the state file (avoid a planted-symlink clobber).
+[ -L "$COUNT_FILE" ] && exit 0
 CURRENT=$(cat "$COUNT_FILE" 2>/dev/null || echo 0)
 case "$CURRENT" in ''|*[!0-9]*) CURRENT=0 ;; esac
 
@@ -110,7 +120,7 @@ if [ "$CURRENT" -ge "$MAX_BLOCKS" ]; then
   exit 0
 fi
 
-echo $((CURRENT + 1)) > "$COUNT_FILE"
+echo $((CURRENT + 1)) > "$COUNT_FILE" 2>/dev/null || exit 0   # fail open if the count can't be persisted
 
 FEEDBACK=$(jq -r '.feedback_template // "Re-invoke the reviewer with an explicit instruction to begin its response with the required structural elements before addressing any caller-provided structure or questions."' "$CONFIG_FILE" 2>/dev/null)
 

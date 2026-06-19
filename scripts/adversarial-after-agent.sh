@@ -40,6 +40,12 @@ TRANSCRIPT=$(printf '%s' "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/nul
 # Only `*-expert` subagents trigger the pairing rule.
 [[ "$SUBAGENT_TYPE" != *-expert ]] && exit 0
 
+# Security: subagent_type is interpolated into the reviewer file path and the dedup regex
+# below. Reject anything outside the minting namespace ([a-z0-9-]) so a crafted value
+# cannot traverse the filesystem or inject regex metacharacters. A non-conforming type has
+# no managed reviewer anyway -> fail open.
+case "$SUBAGENT_TYPE" in *[!a-z0-9-]*) exit 0 ;; esac
+
 REVIEWER="${SUBAGENT_TYPE%-expert}-reviewer"
 REVIEWER_FILE="$HOME/.claude/agents/${REVIEWER}.md"
 
@@ -51,7 +57,7 @@ REVIEWER_FILE="$HOME/.claude/agents/${REVIEWER}.md"
 # the reviewer name does NOT match this — so a mention cannot suppress the directive.
 # (Assumes `[a-z0-9-]` agent names, the minting convention; disclosed in CLAIMS.)
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-  if grep -Eq "\"subagent_type\"[[:space:]]*:[[:space:]]*\"${REVIEWER}\"" "$TRANSCRIPT" 2>/dev/null; then
+  if grep -Eq -- "\"subagent_type\"[[:space:]]*:[[:space:]]*\"${REVIEWER}\"" "$TRANSCRIPT" 2>/dev/null; then
     exit 0
   fi
 fi

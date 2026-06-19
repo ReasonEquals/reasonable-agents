@@ -29,25 +29,34 @@ ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Private identity | knowledge-base paths | health | client + methodology | raw emails.
 PATTERN='ryan|walsh|juno|concord|spinal|qrspi|horthy|reasons_brain|reason-cowork|reasons-os|persona-evals|os\.db|/Users/|adhd|adderall|whoop|discord.*token|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]'
 
-rc=0
-grep -rInE "${PATTERN}" "${ROOT}" \
+# Scan binaries as text (-a, not -I): a leak gate must never skip a file just because it
+# contains a NUL byte. This gate's own source necessarily contains the blocklist, so it is
+# self-excluded by EXACT path (not by basename) — a stray file named contraband.sh
+# elsewhere cannot evade the scan.
+self="${ROOT}/tests/contraband.sh"
+set +e
+matches="$(grep -ranE "${PATTERN}" "${ROOT}" \
   --exclude-dir=.git \
   --exclude-dir=.claude \
   --exclude-dir=node_modules \
-  --exclude='.git' \
-  --exclude='contraband.sh' || rc=$?
+  --exclude='.git' 2>/dev/null)"
+rc=$?
+set -e
 
-case "${rc}" in
-  0)
-    printf '\nCONTRABAND: private token(s) found in shipped files (see matches above).\n' >&2
-    exit 1
-    ;;
-  1)
-    printf 'contraband: clean — no private tokens in shipped files.\n'
-    exit 0
-    ;;
-  *)
-    printf 'contraband: ERROR — grep failed (rc=%s); not certifying clean.\n' "${rc}" >&2
-    exit 2
-    ;;
-esac
+# grep rc: 0 = matches, 1 = no matches, >1 = real error.
+if [ "${rc}" -gt 1 ]; then
+  printf 'contraband: ERROR — grep failed (rc=%s); not certifying clean.\n' "${rc}" >&2
+  exit 2
+fi
+
+# Drop lines from this gate's own source (matched at line-start by exact path; literal).
+matches="$(printf '%s\n' "${matches}" | awk -v s="${self}:" 'NF && index($0, s) != 1')"
+
+if [ -n "${matches}" ]; then
+  printf '%s\n' "${matches}" >&2
+  printf '\nCONTRABAND: private token(s) found in shipped files (see matches above).\n' >&2
+  exit 1
+fi
+
+printf 'contraband: clean — no private tokens in shipped files.\n'
+exit 0

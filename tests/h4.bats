@@ -77,3 +77,19 @@ payload() {
   run bash "$H4" <<< "$(payload trail-route-planning-expert "$TRANSCRIPT")"
   [ "$status" -eq 0 ]
 }
+
+@test "security (L2): subagent_type with a regex metachar is rejected, not used in the dedup regex" {
+  # Unsanitized, 'a.b-expert' would make the dedup pattern treat '.' as a wildcard.
+  # A paired reviewer file exists, transcript is empty → without the charset guard this
+  # would FIRE (exit 2); with the guard the non-namespace type is ignored (exit 0).
+  printf '%s\n' '---' 'name: a.b-reviewer' '---' 'reviewer body' > "$HOME/.claude/agents/a.b-reviewer.md"
+  run bash "$H4" <<< "$(payload "a.b-expert" "$TRANSCRIPT")"
+  [ "$status" -eq 0 ]
+}
+
+@test "security (C1): traversal subagent_type is rejected before any path use → silent pass" {
+  make_reviewer
+  run bash "$H4" <<< "$(payload "../../../../etc/passwd-expert" "$TRANSCRIPT")"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}

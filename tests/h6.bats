@@ -97,3 +97,31 @@ payload() {
   run bash "$H6" <<< "$(payload trail-route-planning-reviewer "$OMIT_BAILOUT" brk)"
   [ "$status" -eq 0 ]
 }
+
+@test "security (C1): traversal subagent_type is rejected — attacker-chosen JSON is never loaded" {
+  # Plant an attacker validator outside the DATA dir; aim the traversal at it.
+  mkdir -p "$TMP/evil"
+  printf '{"required_patterns":[{"name":"x","regex":"NOPE"}],"feedback_template":"ATTACKER-DIRECTIVE"}' > "$TMP/evil/x.json"
+  # From ${DATA_DIR}/validators/, '../../evil/x' resolves to $TMP/evil/x.json.
+  run bash "$H6" <<< "$(payload "../../evil/x" "$OMIT_BAILOUT")"
+  [ "$status" -eq 0 ]                            # rejected by the charset guard → fail open
+  [[ "$output" != *"ATTACKER-DIRECTIVE"* ]]      # the attacker feedback_template is never injected
+}
+
+@test "security (M2): a validator regex beginning with '-' is a literal pattern (grep --), not an option" {
+  printf '{"required_patterns":[{"name":"dash-literal","regex":"-FLAGLIKE-"}],"feedback_template":"x"}' \
+    > "$CLAUDE_PLUGIN_DATA/validators/dashy-reviewer.json"
+  # The literal token IS present in the output → a correct literal match → element present → pass.
+  # Without `--`, grep parses '-F...' as an option and this would not cleanly match.
+  run bash "$H6" <<< "$(payload dashy-reviewer "here is -FLAGLIKE- in the reviewer output")"
+  [ "$status" -eq 0 ]
+}
+
+@test "security (M1): H6 refuses to write through a symlinked count file" {
+  victim="$TMP/victim"; printf 'PRECIOUS' > "$victim"
+  sdir="$CLAUDE_PLUGIN_DATA/state/validator-blocks"; mkdir -p "$sdir"
+  ln -s "$victim" "$sdir/brk_trail-route-planning-reviewer.count"
+  run bash "$H6" <<< "$(payload trail-route-planning-reviewer "$OMIT_BAILOUT" brk)"
+  [ "$status" -eq 0 ]                            # symlink guard → fail open, no block
+  [ "$(cat "$victim")" = "PRECIOUS" ]            # victim NOT clobbered through the symlink
+}

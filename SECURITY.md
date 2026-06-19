@@ -29,6 +29,18 @@ The hooks fail open by design: on any error or uncertainty they exit 0 (silent p
 work because of their own malfunction. This is a deliberate trust-ladder choice for code that runs on every
 qualifying subagent call.
 
+## Input handling & validator trust
+
+The hooks treat their JSON stdin as untrusted. `subagent_type` and `session_id` are validated to the
+`[a-z0-9-]` / `[A-Za-z0-9_-]` namespace **before** they are used in any file path, so a crafted value cannot
+redirect the validator lookup or the circuit-breaker state file outside their intended directories. Pattern
+matching uses `grep -E --` so a validator's `regex` can never be parsed as a grep option; the breaker never
+follows a symlink and fails open if it cannot persist its own state.
+
+A **validator schema is executable-equivalent config**: H6 runs its `regex` with `grep` and injects its
+`feedback_template` into your conversation. Install only validators you trust — treat a third-party
+`<reviewer>.json` like any other code you would run.
+
 ## Supported surface
 
 Local Claude Code CLI / desktop only. Web and cloud session behavior is unverified.
