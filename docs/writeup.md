@@ -1,54 +1,89 @@
-# reasonable-agents — technical writeup (DRAFT)
+# reasonable-agents
 
-> **DRAFT.** Values marked `<PENDING>` are filled in after the live gate runs — do not cite them yet.
+Most agent-persona packs ship a reviewer as a markdown file and hope the agent reads it. The hope is the bug.
+An agent that just produced 400 lines of confident work is the worst judge of whether that work is any good,
+and a review instruction sitting in a sibling file does nothing if the turn ends before anyone runs it.
 
-## The wedge: enforce the review, don't just ship the reviewer
+`reasonable-agents` is a Claude Code plugin that moves the review out of the agent's good intentions and into
+the harness. Two hooks do it:
 
-Static persona packs ship a reviewer as a markdown file and hope the agent reads it. Validation
-toolkits check a persona's structure but don't block on a missing review. `reasonable-agents` leads
-with the part that is actually load-bearing: **a harness hook that blocks the turn until the paired
-skeptic has run, and a second hook that checks the skeptic's output against a structural schema.**
+- **H4, pairing.** After an `*-expert` subagent runs, if its paired `*-reviewer` exists and hasn't run this
+  session, H4 injects a directive to run it before the turn proceeds.
+- **H6, output validation.** After a reviewer runs, H6 checks its output against a per-persona schema: the
+  required tables plus a verdict keyword. Miss one and it injects a re-invoke directive that names the
+  specific thing missing, capped by a per-session circuit breaker.
 
-Two `PostToolUse` / `Agent` hooks:
-
-- **H4 — pairing enforcement.** After an `*-expert` subagent runs, if a paired `*-reviewer` exists in
-  the user's agents dir and hasn't run this session, inject a directive to run it.
-- **H6 — output validation.** After a reviewer runs, validate its output against a per-persona schema
-  of required structural elements; on a miss, inject a re-invoke directive (circuit-breaker capped).
-
-Both fail open. Compliance with an injected directive is **model-mediated, not mechanical** — so the
-package publishes a *measured compliance rate*, never "forced." (See [CLAIMS.md](../CLAIMS.md),
-[SECURITY.md](../SECURITY.md).)
+Both fail open. Missing schema, empty output, a parse error, a missing dependency: exit 0, stay out of the
+way. And the one line of honesty the whole project is built on. Compliance with an injected directive is
+model-mediated, not mechanical. The hook makes the review fire. It can't make the model obey. So the package
+publishes a measured compliance rate instead of calling the review "forced."
 
 ## Receipts, not adjectives
 
-Every claim names a check:
+Every claim names a check you can run.
 
-- The directive fires / the validator blocks → `tests/h4.bats`, `tests/h6.bats` (offline, no API spend).
-- The validator discriminates on a *specific* missing element → the strengthened negative test in
-  `tests/h6.bats` (asserts the block names the omitted element, not just "malformed").
-- No personal data ships → `tests/contraband.sh` (also a CI job).
-- Why harness enforcement exists at all → [docs/provenance.md](provenance.md) (the measured
-  prompt-level failure that motivated H6).
-- Live pairing-compliance rate → `<PENDING: n/N>` (measured on the fixture pair).
+| Claim | Receipt |
+|---|---|
+| An `*-expert` without its reviewer triggers a blocking directive | `tests/h4.bats`: offline payload replay |
+| Malformed reviewer output triggers a re-invoke that names the *specific* missing element | `tests/h6.bats`: the strengthened negative test |
+| The directive fires whenever the expert runs; the model then complies at a measured rate | `bench/live-pairing-demo.md`: 10 neutral runs. The expert ran in 9; H4 fired in all 9; the model ran the reviewer in all 9 (9/9). One run invoked no subagent |
+| Each shipped starter persona's reviewer passes its own schema, run for real | `bench/pack-dogfood/*.md`: 6 triples, dogfooded end to end |
+| Harness enforcement exists because prompt-level enforcement measurably failed | `docs/provenance.md` |
+| No personal data ships | `tests/contraband.sh`: a CI gate, run on every commit |
 
-## The skeptic caught my own bugs
+The split in the middle two rows is the honest core. That the directive fires is mechanically provable and
+runs offline, no API spend. That the model then complies is a live number. Measured, published as-is, not
+rounded up to "guaranteed."
 
-This package was built through adversarial review, and the review earned its keep twice on the hooks'
-own design:
+## The skeptic caught my own bugs, three times
 
-1. **Bare-string dedup.** The first H4 dedup matched the reviewer's name as a bare quoted string
-   anywhere in the transcript. A reviewer merely *mentioned* in prose would have falsely counted as
-   "already run," silently suppressing the directive. Fixed to match the **structured**
-   `subagent_type` field — a mention no longer suppresses.
-2. **Kill-switch `:-` cascade.** An early kill-switch used a positional `:-` default that could read
-   as "off" on an empty value — enforcement silently disabled by a propagation glitch. Fixed to
-   normalize + explicit set-match, default-enforce.
+Not a thought experiment. The review earned its keep on the plugin's own construction.
 
-Neither was caught by writing the code; both were caught by running the skeptic against the plan.
-That is the product, demonstrated on itself.
+1. **Bare-string dedup (H4).** The first dedup matched the reviewer's name as a quoted string anywhere in the
+   transcript. A reviewer merely mentioned in prose would have counted as "already run," silently suppressing
+   the directive. Fixed to match the structured `subagent_type` field. A mention no longer counts as a run.
+2. **Kill-switch `:-` cascade.** An early kill-switch used a positional `:-` default that could read as "off"
+   on an empty value. Enforcement silently disabled by a propagation glitch. Fixed to normalize and
+   explicit-set-match, default-enforce.
+3. **A vacuous schema, caught before it shipped.** Planning the starter pack, the reviewer flagged that
+   keying the API reviewer's compatibility table on the word `Breaking` would pass vacuously. "Breaking" and
+   "Non-breaking" show up in the cells of the next table over, so a reviewer could drop the real compatibility
+   table and still slip through. The schema keys on `Change` now, and a test proves a
+   Facet-table-with-Breaking-cells-but-no-Change-table still blocks.
 
-## What's not here (yet)
+None of these got caught by writing the code. All three got caught by running the skeptic against the plan.
+That is the product, run on itself.
 
-Minting, eval scaffolds, the factory loop, and a starter persona pack are later, demand-gated phases.
-This release is the enforcement chain plus its tests and receipts. Phase 3 dogfood runs: `<PENDING>`.
+## The starter pack, built through the harness it installs
+
+An empty harness can't be fairly evaluated. So the plugin ships six born-clean expert + reviewer + validator
+triples in `pack/`: `software-architecture-review`, `agent-and-prompt-design`, `api-contract-design`,
+`security-threat-modeling`, `test-strategy-design`, and `boss-fight-design`. Authored fresh from public domain
+knowledge, not scrubbed from anyone's config.
+
+Each one was dogfooded through the plugin's own chain before shipping. A clean headless session runs the
+expert on a generic task, H4 fires, the reviewer runs, and H6 validates the reviewer's natural output against
+its own schema. It passed first try, every time. The runs are in `bench/pack-dogfood/`.
+
+Proving that meant working around three live-testing facts: HOME-bound auth, the user's own hooks co-firing on
+the same event, and stream-json swallowing hook stderr. The fix is a logger wrapper whose side log is the
+ground truth. That wrapper then caught a real leak in the act. A `Bash`-enabled reviewer ran `ls` mid-review
+and pulled the host account name into its output. The contraband gate flagged it. Receipts are rebuilt from
+parsed fields and never quote the raw transcript, so nothing reached a committed file. The leak-safety design,
+shown surviving a real leak.
+
+## What "validated" means, and what it doesn't
+
+Validated here means process-validated: briefing-grounded, adversarially paired, schema-checked. It is not a
+domain-accuracy benchmark, and not a guarantee the expert is right. The hooks reduce missed reviews. They are
+not a hard gate. Reviewer lookup is user-scope only (`~/.claude/agents/`), dedup is best-effort across
+sessions, and behavior is verified on the local CLI and desktop. All of it is written down in
+[CLAIMS.md](../CLAIMS.md) and [SECURITY.md](../SECURITY.md). On a tool whose whole pitch is trustworthy
+review, the honesty discipline is the credibility.
+
+## What's next
+
+This release is the enforcement chain, the starter pack, and these receipts. Minting triads on demand, the
+eval scaffolds, and the broader persona library are later phases, gated on whether this one earns real use.
+The thing worth copying isn't the persona files. It's the pattern. Put the check at a layer the agent can't
+talk its way around, then measure and publish how well it holds.
