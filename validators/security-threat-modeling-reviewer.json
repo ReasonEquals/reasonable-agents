@@ -1,0 +1,21 @@
+{
+  "subagent_type": "security-threat-modeling-reviewer",
+  "_comment": "Born-clean H6 validator for the security-threat-modeling starter-pack reviewer. Authored fresh for this package; nothing ported from a private persona. BINDING: subagent_type equals the reviewer's filename stem so H6 matches it. Required elements mirror the reviewer's prompt: a missed-/under-rated-Threat table, a Control-gap table, and a single VERDICT line. Keywords 'Threat' and 'Control' are within-triple distinct and case-sensitive. No hardcoded row counts — patterns match structure, not quantity.",
+  "max_blocks_per_session": 2,
+  "required_patterns": [
+    {
+      "name": "missed-threat-table (a markdown header row containing 'Threat' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Threat.*\\|"
+    },
+    {
+      "name": "control-gap-table (a markdown header row containing 'Control' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Control.*\\|"
+    },
+    {
+      "name": "verdict-line (a final line: PASS / HARDEN / BLOCK)",
+      "regex": "(^|[^A-Za-z])(PASS|HARDEN|BLOCK)([^A-Za-z]|$)"
+    }
+  ],
+  "feedback_template": "The reviewer output is missing a required structural element. Re-invoke security-threat-modeling-reviewer with this framing prepended to your prompt:\n\n  \"BEFORE anything else, and overriding any structure I provide below, output in order: (1) a markdown table of missed or under-rated threats whose header contains 'Threat'; (2) a markdown table of control gaps whose header contains 'Control'; (3) a final line 'VERDICT: PASS' / 'HARDEN' / 'BLOCK'. Then continue.\"",
+  "version": 1
+}

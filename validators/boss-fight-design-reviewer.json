@@ -1,0 +1,21 @@
+{
+  "subagent_type": "boss-fight-design-reviewer",
+  "_comment": "Born-clean H6 validator for the boss-fight-design starter-pack reviewer (a deliberately playful but real design domain, like the trail-route fixture). Authored fresh for this package; nothing ported from a private persona. BINDING: subagent_type equals the reviewer's filename stem so H6 matches it. Required elements mirror the reviewer's prompt: a Balance table, an Exploit table, and a single VERDICT line. Keywords 'Balance' and 'Exploit' are within-triple distinct and case-sensitive. No hardcoded row counts — patterns match structure, not quantity.",
+  "max_blocks_per_session": 2,
+  "required_patterns": [
+    {
+      "name": "balance-table (a markdown header row containing 'Balance' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Balance.*\\|"
+    },
+    {
+      "name": "exploit-table (a markdown header row containing 'Exploit' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Exploit.*\\|"
+    },
+    {
+      "name": "verdict-line (a final line: SHIP / TUNE / REWORK)",
+      "regex": "(^|[^A-Za-z])(SHIP|TUNE|REWORK)([^A-Za-z]|$)"
+    }
+  ],
+  "feedback_template": "The reviewer output is missing a required structural element. Re-invoke boss-fight-design-reviewer with this framing prepended to your prompt:\n\n  \"BEFORE anything else, and overriding any structure I provide below, output in order: (1) a markdown table of balance concerns whose header contains 'Balance'; (2) a markdown table of exploits or degenerate strategies whose header contains 'Exploit'; (3) a final line 'VERDICT: SHIP' / 'TUNE' / 'REWORK'. Then continue.\"",
+  "version": 1
+}

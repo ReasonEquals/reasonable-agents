@@ -1,0 +1,21 @@
+{
+  "subagent_type": "test-strategy-design-reviewer",
+  "_comment": "Born-clean H6 validator for the test-strategy-design starter-pack reviewer. Authored fresh for this package; nothing ported from a private persona. BINDING: subagent_type equals the reviewer's filename stem so H6 matches it. Required elements mirror the reviewer's prompt: a Coverage-gap table, a Brittleness table, and a single VERDICT line. Keywords 'Coverage' and 'Brittleness' are within-triple distinct and case-sensitive. No hardcoded row counts — patterns match structure, not quantity.",
+  "max_blocks_per_session": 2,
+  "required_patterns": [
+    {
+      "name": "coverage-gap-table (a markdown header row containing 'Coverage' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Coverage.*\\|"
+    },
+    {
+      "name": "brittleness-table (a markdown header row containing 'Brittleness' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Brittleness.*\\|"
+    },
+    {
+      "name": "verdict-line (a final line: SHIP / REVISE / REJECT)",
+      "regex": "(^|[^A-Za-z])(SHIP|REVISE|REJECT)([^A-Za-z]|$)"
+    }
+  ],
+  "feedback_template": "The reviewer output is missing a required structural element. Re-invoke test-strategy-design-reviewer with this framing prepended to your prompt:\n\n  \"BEFORE anything else, and overriding any structure I provide below, output in order: (1) a markdown table of coverage gaps whose header contains 'Coverage'; (2) a markdown table of brittleness risks whose header contains 'Brittleness'; (3) a final line 'VERDICT: SHIP' / 'REVISE' / 'REJECT'. Then continue.\"",
+  "version": 1
+}

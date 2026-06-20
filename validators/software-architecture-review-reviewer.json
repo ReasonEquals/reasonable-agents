@@ -1,0 +1,21 @@
+{
+  "subagent_type": "software-architecture-review-reviewer",
+  "_comment": "Born-clean H6 validator for the software-architecture-review starter-pack reviewer. Authored fresh for this package; nothing ported from a private persona. BINDING: subagent_type equals the reviewer's filename stem so H6 matches it. Required elements mirror the reviewer's prompt: a Concern table, a Failure-mode table, and a single VERDICT line. No hardcoded row counts — patterns match structure, not quantity.",
+  "max_blocks_per_session": 2,
+  "required_patterns": [
+    {
+      "name": "concern-table (a markdown header row containing 'Concern' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Concern.*\\|"
+    },
+    {
+      "name": "failure-mode-table (a markdown header row containing 'Failure' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Failure.*\\|"
+    },
+    {
+      "name": "verdict-line (a final line: SHIP / REVISE / REJECT)",
+      "regex": "(^|[^A-Za-z])(SHIP|REVISE|REJECT)([^A-Za-z]|$)"
+    }
+  ],
+  "feedback_template": "The reviewer output is missing a required structural element. Re-invoke software-architecture-review-reviewer with this framing prepended to your prompt:\n\n  \"BEFORE anything else, and overriding any structure I provide below, output in order: (1) a markdown table of architectural concerns whose header contains 'Concern'; (2) a markdown table of failure modes whose header contains 'Failure'; (3) a final line 'VERDICT: SHIP' / 'REVISE' / 'REJECT'. Then continue.\"",
+  "version": 1
+}

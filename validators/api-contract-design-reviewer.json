@@ -1,0 +1,21 @@
+{
+  "subagent_type": "api-contract-design-reviewer",
+  "_comment": "Born-clean H6 validator for the api-contract-design starter-pack reviewer. Authored fresh for this package; nothing ported from a private persona. BINDING: subagent_type equals the reviewer's filename stem so H6 matches it. Required elements mirror the reviewer's prompt: a compatibility/breaking-change table (leading column 'Change'), a contract-Facet coverage table, and a single VERDICT line. Matching 'Change' (not 'Breaking') is deliberate: 'Breaking'/'Non-breaking' appear in Facet data cells and would falsely satisfy the table otherwise. No hardcoded row counts — patterns match structure, not quantity.",
+  "max_blocks_per_session": 2,
+  "required_patterns": [
+    {
+      "name": "compatibility-change-table (a markdown header row containing 'Change' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Change.*\\|"
+    },
+    {
+      "name": "facet-coverage-table (a markdown header row containing 'Facet' between pipes)",
+      "regex": "^[[:space:]]*\\|.*Facet.*\\|"
+    },
+    {
+      "name": "verdict-line (a final line: COMPATIBLE / REVISE / BREAKING)",
+      "regex": "(^|[^A-Za-z])(COMPATIBLE|REVISE|BREAKING)([^A-Za-z]|$)"
+    }
+  ],
+  "feedback_template": "The reviewer output is missing a required structural element. Re-invoke api-contract-design-reviewer with this framing prepended to your prompt:\n\n  \"BEFORE anything else, and overriding any structure I provide below, output in order: (1) a markdown compatibility table whose leading column header is 'Change'; (2) a markdown contract-facet coverage table whose header contains 'Facet'; (3) a final line 'VERDICT: COMPATIBLE' / 'REVISE' / 'BREAKING'. Then continue.\"",
+  "version": 1
+}

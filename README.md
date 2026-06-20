@@ -1,9 +1,9 @@
 # reasonable-agents
 
 > **Status: enforcement chain (v0.1).** The two enforcement hooks — H4 (expert→reviewer pairing) and H6
-> (reviewer-output validation) — are live and covered by an offline test suite. Minting, eval scaffolds, and a
-> starter persona pack are later, demand-gated phases. Local Claude Code CLI / desktop. See
-> [CLAIMS.md](CLAIMS.md) for exactly what is and isn't backed.
+> (reviewer-output validation) — are live and covered by an offline test suite. A small born-clean starter
+> persona pack ships in [`pack/`](pack/); minting and eval scaffolds are later, demand-gated phases. Local
+> Claude Code CLI / desktop. See [CLAIMS.md](CLAIMS.md) for exactly what is and isn't backed.
 
 Harness-enforced adversarial review for Claude Code subagents.
 
@@ -85,6 +85,16 @@ copied.
 
 > **Editing a hook script?** Plugin hooks are registered at install time, so a source edit needs a reload:
 > `claude plugin uninstall reasonable-agents@reasonable-agents && claude plugin install reasonable-agents@reasonable-agents`.
+
+## Starter persona pack
+
+Six ready-to-use expert + reviewer + validator triples ship in [`pack/`](pack/) —
+`software-architecture-review`, `agent-and-prompt-design`, `api-contract-design`, `security-threat-modeling`,
+`test-strategy-design`, and `boss-fight-design`. They are born-clean and
+generic (authored from public domain knowledge, not extracted from anyone's config), and each was built and
+validated through this plugin's own enforcement chain — see the receipts in
+[`bench/pack-dogfood/`](bench/pack-dogfood/). Copy a triple's expert + reviewer into `~/.claude/agents/`; its
+validator already ships in `validators/` and H6 finds it automatically. Details: [`pack/README.md`](pack/README.md).
 
 ## Configuration (environment variables only)
 
