@@ -16,14 +16,18 @@ the harness drives it. (Compliance with the directive is model-mediated, not mec
 
 ## The model: mint → enforce → verify
 
-- **Mint** a domain-expert + adversarial-reviewer persona pair, grounded in a researched briefing.
-- **Enforce** the pairing at the hook layer: after an `*-expert` subagent runs without its paired
-  `*-reviewer`, a `PostToolUse` hook injects a directive to run the reviewer; a second hook validates the
-  reviewer's output against a structural schema and injects a re-invoke directive on failure.
-- **Verify** with shipped eval scaffolds.
+The full arc is mint → enforce → verify. **v0.1 ships the enforce step**, plus a hand-authored starter pack.
+Mint and verify are later, demand-gated phases.
+
+- **Mint** *(later phase)*: generate a domain-expert + adversarial-reviewer persona pair grounded in a
+  researched briefing. For now the pairs are hand-authored — see the [starter pack](pack/).
+- **Enforce** *(ships now)*: after an `*-expert` subagent runs without its paired `*-reviewer`, a
+  `PostToolUse` hook injects a directive to run the reviewer; a second hook validates the reviewer's output
+  against a structural schema and injects a re-invoke directive on failure.
+- **Verify** *(later phase)*: eval scaffolds for scoring persona output. Not in this release.
 
 Precision matters: compliance with an injected directive is **model-mediated, not mechanical**. This package
-publishes a *measured compliance rate* — it does not claim review is "forced." See [CLAIMS.md](CLAIMS.md).
+publishes a *measured compliance rate*; it does not claim review is "forced." See [CLAIMS.md](CLAIMS.md).
 
 ## What this isn't
 
@@ -65,11 +69,10 @@ claude plugin install reasonable-agents@reasonable-agents
 mkdir -p ~/.claude/agents
 cp fixtures/trail-route-planning-expert.md   ~/.claude/agents/
 cp fixtures/trail-route-planning-reviewer.md ~/.claude/agents/
-
-# 3. Copy the fixture's validator schema where H6 looks for it.
-mkdir -p ~/.claude/state/reasonable-agents/validators
-cp fixtures/trail-route-planning-reviewer.json ~/.claude/state/reasonable-agents/validators/
 ```
+
+The fixture's validator already ships in `validators/`, so H6 finds it automatically once the plugin is
+installed — same as the starter pack, no copy needed.
 
 Then, in Claude Code:
 
@@ -80,7 +83,7 @@ Then, in Claude Code:
    table, or a `VERDICT:` line), **H6 fires** a re-invoke directive naming the missing element; once the output
    is well-formed, H6 passes silently.
 
-Turn it off any time with `export REASONABLE_AGENTS_DISABLE=1`. To undo the demo, delete the three files you
+Turn it off any time with `export REASONABLE_AGENTS_DISABLE=1`. To undo the demo, delete the two files you
 copied.
 
 > **Editing a hook script?** Plugin hooks are registered at install time, so a source edit needs a reload:
