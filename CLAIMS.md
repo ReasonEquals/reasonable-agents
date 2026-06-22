@@ -33,5 +33,8 @@ PENDING.
   The dedup also assumes `[a-z0-9-]` agent names (the minting convention); a name with regex metacharacters
   could loosen the match.
 - **Local CLI / desktop only.** Behavior in web/cloud Claude Code sessions is unverified.
-- **Plugin-spec churn.** Hook payload shapes are coupled to Claude Code internals; CI runs weekly against the
-  latest Claude Code to catch drift.
+- **Plugin-spec churn.** Hook payload shapes are coupled to Claude Code internals. Weekly CI runs `claude
+  plugin validate` against the latest Claude Code, catching *manifest-schema* drift — but not payload-shape
+  drift: the offline tests replay fixed payloads and CI invokes no live subagent. A silent payload change
+  would make the hooks no-op (fail-open) with CI still green, so re-running `bench/live-pairing-demo.md` is
+  the manual canary.
