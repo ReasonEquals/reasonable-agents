@@ -35,7 +35,7 @@ PATTERN='ryan|walsh|juno|concord|spinal|qrspi|horthy|reasons_brain|reason-cowork
 # elsewhere cannot evade the scan.
 self="${ROOT}/tests/contraband.sh"
 set +e
-matches="$(grep -ranE "${PATTERN}" "${ROOT}" \
+matches="$(grep -raniE "${PATTERN}" "${ROOT}" \
   --exclude-dir=.git \
   --exclude-dir=.claude \
   --exclude-dir=node_modules \
