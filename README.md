@@ -99,6 +99,44 @@ validated through this plugin's own enforcement chain — see the receipts in
 [`bench/pack-dogfood/`](bench/pack-dogfood/). Copy a triple's expert + reviewer into `~/.claude/agents/`; its
 validator already ships in `validators/` and H6 finds it automatically. Details: [`pack/README.md`](pack/README.md).
 
+## Author your own triad
+
+The hooks aren't special-cased to the starter pack — H4 pairs **any** `<name>-expert` with a `<name>-reviewer`,
+and H6 validates against **any** `<name>-reviewer.json` you provide. A bring-your-own triad is three files: an
+expert, a reviewer, and a validator.
+
+**The pair.** Drop `<name>-expert.md` and `<name>-reviewer.md` into `~/.claude/agents/` — ordinary
+[subagent definitions](https://code.claude.com/docs/en/sub-agents). The `-expert` / `-reviewer` suffixes are the
+whole pairing trigger; write the reviewer to *open* its response with the structural elements you'll check.
+
+**The validator.** Create `~/.claude/state/reasonable-agents/validators/<name>-reviewer.json`. Each entry in
+`required_patterns` is a `grep -E` regex H6 requires in the reviewer's output; a miss injects `feedback_template`
+as a re-invoke directive. Match *structure, not quantity* (a header row, a verdict keyword), never a row count:
+
+```json
+{
+  "subagent_type": "<name>-reviewer",
+  "max_blocks_per_session": 2,
+  "required_patterns": [
+    { "name": "risk table",   "regex": "^[[:space:]]*\\|.*Risk.*\\|" },
+    { "name": "verdict line", "regex": "(^|[^A-Za-z])(SHIP|REVISE|REJECT)([^A-Za-z]|$)" }
+  ],
+  "feedback_template": "Re-invoke the reviewer and, before anything else, output a Risk table and one ALL-CAPS verdict."
+}
+```
+
+Create the dir first (`mkdir -p ~/.claude/state/reasonable-agents/validators`);
+[`validators/example-reviewer.json`](validators/example-reviewer.json) is the fully annotated version to crib from.
+
+Invoke `<name>-expert` and the chain runs on your triad exactly as it does on the pack.
+
+**The validator is optional.** Ship just the pair and you still get H4 pairing; add the validator and H6 starts
+checking output. A pair with no validator is a working triad-minus-one, not a failure.
+
+**The honest cost:** hand-writing that schema is the manual part of "author your own" — exactly the friction the
+minter (a later phase) is meant to remove. Until then, the example above and the six in
+[`validators/`](validators/) are your reference.
+
 ## Configuration (environment variables only)
 
 Kill-switches are plain environment variables read at the top of each hook script — export them in your shell
