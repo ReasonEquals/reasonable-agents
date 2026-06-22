@@ -81,7 +81,7 @@ sessions, and behavior is verified on the local CLI and desktop. All of it is wr
 [CLAIMS.md](../CLAIMS.md) and [SECURITY.md](../SECURITY.md). On a tool whose whole pitch is trustworthy
 review, the honesty discipline is the credibility.
 
-## A sibling application
+## The spine generalizes
 
 The expert-and-skeptic pair is what's new in reasonable-agents. A domain expert and its adversarial
 reviewer, blocked at the hook layer until the skeptic has run and its output passes a schema. Everything
@@ -89,18 +89,6 @@ above is about that.
 
 What generalizes is one layer down. The pair is a payload. The spine underneath is the point: enforcement
 in the harness, not in prose the model can talk its way around. Swap the payload and the spine still holds.
-
-The clearest proof is a second plugin already running on that spine. It carries Dexter Horthy's QRSPI
-methodology instead of an expert and a reviewer. The hooks are the same shape; what they guard is different.
-A dumb-zone block that stops further edits once context degrades. A research step that hides the ticket from
-the researcher, so the answers come back as facts instead of opinions about what to build. A session-review
-gate that holds a commit suggestion until the review has run. Different guardrails, same move: the check sits
-where the model can't argue with it.
-
-It's written up separately, and it points back here for the technique instead of absorbing it. Same play,
-two angles, each billed on its own.
-
-<!-- TODO: link the QRSPI writeup once it has a public home -->
 
 ## What's next
 
