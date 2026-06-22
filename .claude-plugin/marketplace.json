@@ -4,13 +4,13 @@
     "name": "ReasonEquals"
   },
   "metadata": {
-    "description": "Self-marketplace for the reasonable-agents plugin — harness-enforced adversarial review for Claude Code subagents."
+    "description": "Self-marketplace for the reasonable-agents plugin: harness-enforced adversarial review for Claude Code subagents."
   },
   "plugins": [
     {
       "name": "reasonable-agents",
       "source": "./",
-      "description": "Harness-enforced adversarial review for Claude Code subagents — H4 enforces expert→reviewer pairing; H6 validates reviewer output against a structural schema. Hooks fail open; compliance is model-mediated.",
+      "description": "Harness-enforced adversarial review for Claude Code subagents: H4 enforces expert->reviewer pairing; H6 validates reviewer output against a structural schema. Hooks fail open; compliance is model-mediated.",
       "category": "developer-tools",
       "homepage": "https://github.com/ReasonEquals/reasonable-agents"
     }
