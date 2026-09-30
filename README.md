@@ -154,7 +154,7 @@ silently turn enforcement off).
 
 ## Scope limits
 
-The hooks **fail open** (any uncertainty → silent pass), cover **user-scope agents only**
+The hooks **fail open** (any uncertainty → exit 0: silent, or a non-blocking note), cover **user-scope agents only**
 (`~/.claude/agents/`), and compliance is model-mediated. Full list in [CLAIMS.md](CLAIMS.md#scope-limits).
 
 ## License

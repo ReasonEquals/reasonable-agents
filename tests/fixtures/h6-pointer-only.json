@@ -1,0 +1,28 @@
+{
+  "session_id": "fixture-session",
+  "transcript_path": "/nonexistent/fixture-session.jsonl",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Agent",
+  "tool_use_id": "toolu_fixture",
+  "tool_input": {
+    "description": "Adversarial review of plan",
+    "subagent_type": "trail-route-planning-reviewer",
+    "prompt": "Adversarially review the plan."
+  },
+  "tool_response": {
+    "status": "completed",
+    "agentId": "a1b2c3d4e5f6a7b8",
+    "agentType": "trail-route-planning-reviewer",
+    "handback": "send",
+    "harnessNoteCount": 1,
+    "content": [
+      {
+        "type": "text",
+        "text": "This agent's report was delivered to you as a message from \"a1b2c3d4e5f6a7b8\" (its SubagentHandback call). Read it there; it is not repeated here.\n"
+      }
+    ],
+    "totalDurationMs": 1000,
+    "totalTokens": 1000,
+    "totalToolUseCount": 1
+  }
+}
